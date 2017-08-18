@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:task="http://www.springframework.org/schema/task" xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+    <!--
+        如果需要针对不同环境设置,VM参数设置参考: -Dspring.profiles.active=production
+     -->
+    <context:property-placeholder location="classpath*:*.properties"/>
+
+    <context:spring-configured/>
+
+    <context:component-scan base-package="com.github.caryyu.*">
+        <context:exclude-filter expression="org.springframework.stereotype.Controller" type="annotation"/>
+    </context:component-scan>
+
+    <!--<bean class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close" id="dataSource">-->
+        <!--<property name="driverClassName" value="com.mysql.jdbc.Driver"/>-->
+        <!--<property name="url" value="jdbc:mysql://localhost:3306/nakedhub"/>-->
+        <!--<property name="username" value="root"/>-->
+        <!--<property name="password" value="root"/>-->
+        <!--<property name="testOnBorrow" value="false"/>-->
+        <!--<property name="testOnReturn" value="true"/>-->
+        <!--<property name="testWhileIdle" value="true"/>-->
+        <!--<property name="initialSize" value="1"/>-->
+        <!--<property name="maxActive" value="50"/>-->
+        <!--<property name="maxIdle" value="25"/>-->
+        <!--<property name="timeBetweenEvictionRunsMillis" value="1800000"/>-->
+        <!--<property name="numTestsPerEvictionRun" value="3"/>-->
+        <!--<property name="minEvictableIdleTimeMillis" value="1800000"/>-->
+        <!--<property name="validationQuery" value="SELECT 1"/>-->
+    <!--</bean>-->
+
+<bean class="com.mysql.jdbc.jdbc2.optional.MysqlXADataSource" id="mysqlXADataSource">
+    <property name="url" value="jdbc:mysql://localhost:3306/nakedhub"/>
+    <property name="pinGlobalTxToPhysicalConnection" value="true"/>
+    <property name="user" value="root"/>
+    <property name="password" value="root"/>
+</bean>
+
+<bean class="com.atomikos.jdbc.AtomikosDataSourceBean" id="atomikosDataSourceBean"
+      init-method="init" destroy-method="close">
+    <property name="uniqueResourceName" value="xadb"/>
+    <property name="xaDataSource" ref="mysqlXADataSource"/>
+    <property name="maxPoolSize" value="10"/>
+</bean>
+
+<bean class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean" id="entityManagerFactory">
+    <property name="persistenceUnitName" value="persistenceUnit"/>
+    <property name="dataSource" ref="atomikosDataSourceBean"/>
+</bean>
+
+
+    <!--<bean class="org.springframework.orm.jpa.JpaTransactionManager" id="transactionManager">-->
+        <!--<property name="entityManagerFactory" ref="entityManagerFactory"/>-->
+    <!--</bean>-->
+
+    <!--<tx:annotation-driven mode="aspectj" transaction-manager="transactionManager"/>-->
+
+    <!-- Restful Client -->
+    <bean class="org.springframework.web.client.RestTemplate" id="restTemplate" />
+</beans>

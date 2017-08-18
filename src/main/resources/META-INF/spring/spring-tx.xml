@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans  xmlns="http://www.springframework.org/schema/beans"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:tx="http://www.springframework.org/schema/tx"
+        xmlns:p="http://www.springframework.org/schema/p"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:task="http://www.springframework.org/schema/task"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task.xsd">
+
+<bean class="org.apache.activemq.ActiveMQXAConnectionFactory" id="activeMQXAConnectionFactory"
+ p:brokerURL="tcp://localhost:61616"/>
+
+<bean class="com.atomikos.jms.AtomikosConnectionFactoryBean" init-method="init" destroy-method="close">
+    <property name="uniqueResourceName" value="xamq"/>
+    <property name="localTransactionMode" value="false"/>
+    <property name="xaConnectionFactory" ref="activeMQXAConnectionFactory"/>
+</bean>
+
+<bean class="com.atomikos.icatch.jta.UserTransactionImp" id="userTransaction" p:transactionTimeout="1000"/>
+
+<bean class="com.atomikos.icatch.jta.UserTransactionManager" id="userTransactionManager"
+      p:forceShutdown="true" init-method="init" destroy-method="close"/>
+
+<bean class="org.springframework.transaction.jta.JtaTransactionManager" id="transactionManager">
+    <constructor-arg name="userTransaction" ref="userTransaction"/>
+    <constructor-arg name="transactionManager" ref="userTransactionManager"/>
+</bean>
+
+<tx:annotation-driven mode="aspectj" transaction-manager="transactionManager"/>
+
+</beans>
